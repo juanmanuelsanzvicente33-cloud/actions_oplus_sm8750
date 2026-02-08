@@ -17,7 +17,7 @@ on:
           - "Off"
         default: "Off"
       ksunext_multimanager:
-        description: 👥 Multimanager support（weishu KSU、5ec1cff KSU、rsuntk KSU、SukiSU Ultra, ReSukiSU, kowsu, MamboSU, WildKSU）
+        description: "👥 Multimanager support（weishu KSU、5ec1cff KSU、rsuntk KSU、SukiSU Ultra, ReSukiSU, kowsu, MamboSU, WildKSU）"
         required: true
         type: choice
         options:
