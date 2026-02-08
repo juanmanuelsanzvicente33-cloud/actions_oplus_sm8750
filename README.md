@@ -48,7 +48,7 @@
 
 ➜ **自定义**内核构建时间（默认模拟**原厂**标识）
 
-➜ Multimanager 支持（**仅 ReSukiSU！**）：  
+➜ Multimanager 支持（**仅 ReSukiSU & KernelSU Next！**）：  
 `官方 KSU、5ec1cff KSU、rsuntk KSU、KowSU、MamboSU、KernelSU NEXT、WildKSU`
 
 ➜ Unicode 绕过（可使用 **LSPosed 模块**进行无痛修复）
