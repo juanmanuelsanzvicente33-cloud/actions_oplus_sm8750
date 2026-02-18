@@ -564,25 +564,20 @@ jobs:
       - name: 📝 Make ZRAM module | 制作 ZRAM 模块
         run: |
           set -e
-
           echo "📥 正在下载 zram.zip…"
           curl -L "https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/zram.zip" -o "$GITHUB_WORKSPACE/zram.zip"
-
+          
           echo "📦 正在解压…"
           unzip -q "$GITHUB_WORKSPACE/zram.zip" -d "$GITHUB_WORKSPACE/zram"
-
+          
           echo "🔁 正在替换 zram.ko…"
           find "$GITHUB_WORKSPACE/zram" -name "zram.ko" -exec cp "./kernel_workspace/kernel_platform/common/out/drivers/block/zram/zram.ko" {} \;
           rm -rf $GITHUB_WORKSPACE/zram.zip
-
-          echo "📦 正在重新打包 zip…"
-          cd "$GITHUB_WORKSPACE/zram"
-          zip -qr "../zram.zip" .
-
+          
           echo "✅ 完成！"
           
       - name: 📤 Upload zram.zip | 上传 zram.zip
         uses: actions/upload-artifact@v4
         with:
-          name: zram-module.zip
-          path: ./zram.zip
+          name: zram-module
+          path: ./zram/*
