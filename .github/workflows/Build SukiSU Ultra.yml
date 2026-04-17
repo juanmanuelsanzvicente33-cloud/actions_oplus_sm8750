@@ -507,9 +507,6 @@ jobs:
           echo "Adding LZ4 & ZSTD patches..."
           cd kernel_workspace
           
-          # Clone the patches repository
-          git clone https://github.com/mrcxlinux/kernel_patches.git
-          
           # Move into the kernel source tree
           cd common
           
