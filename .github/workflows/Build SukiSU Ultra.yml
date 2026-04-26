@@ -243,27 +243,18 @@ jobs:
       
       - name: Init and Config CCache
         run: |
-          export CCACHE_COMPILERCHECK="none"
-          export CCACHE_BASEDIR="${{ github.workspace }}"
-          export CCACHE_NOHASHDIR="true"
-          export CCACHE_HARDLINK="true"
           export CCACHE_DIR="${{ env.CCACHE_DIR }}"
-          export CCACHE_MAXSIZE="${{ env.CCACHE_MAXSIZE }}"
-          export CCACHE_SLOPPINESS="file_macro,time_macros,include_file_mtime,pch_defines"
-          
           mkdir -p "$CCACHE_DIR"
-          
-          echo "Configuring CCache size to: $CCACHE_MAXSIZE"
-          ccache -M "$CCACHE_MAXSIZE"
+
+          ccache -M "${{ env.CCACHE_MAXSIZE }}"
           ccache -o compression=true
-          
+          ccache -o compiler_check=none
+          ccache -o hash_dir=false
+          ccache -o base_dir="${{ github.workspace }}"
+          ccache -o sloppiness=file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros,locale
+
           echo "Initial CCache status:"
           ccache -s
-          
-          if [ "${{ steps.ccache-restore.outputs.cache-hit }}" == 'true' ]; then
-            echo "CCache Hit Details:"
-            ccache -sv
-          fi   
               
       - name: ⚡ Setup SukiSU Ultra
         run: |
@@ -312,46 +303,34 @@ jobs:
 
       # ── FIX: Missing static key symbols for MANUAL_HOOK mode ────────────────
       - name: 🔧 Fix missing KSU static key symbols
+        working-directory: kernel_workspace/common/drivers/kernelsu
         run: |
-          cd kernel_workspace/common/drivers/kernelsu
-          
-          # Check if symbols are already defined somewhere (not just declared)
           if grep -r "DEFINE_STATIC_KEY_FALSE(ksu_is_input_hook_enabled)" . \
                --include="*.c" > /dev/null 2>&1; then
-            echo "Symbols already defined, skipping stub injection."
+            echo "Symbols already defined, skipping."
             exit 0
           fi
-          
-          echo "Injecting KSU static key stubs for MANUAL_HOOK build..."
-          cat > ksu_static_keys_stub.c << 'EOF'
-          #include <linux/kernel.h>
-          #include <linux/jump_label.h>
 
-          /*
-           * SukiSU Ultra static key stubs for non-kprobes (MANUAL_HOOK) builds.
-           * These are normally provided by the hook manager but are absent in
-           * builtin/embedded configurations for this kernel source.
-           * All keys default to FALSE — hooks are off and enabled selectively at runtime.
-           */
-          DEFINE_STATIC_KEY_FALSE(ksu_is_input_hook_enabled);
-          EXPORT_SYMBOL_GPL(ksu_is_input_hook_enabled);
+          KSUD="runtime/ksud.c"
+          [ ! -f "$KSUD" ] && KSUD="ksud.c"
 
-          DEFINE_STATIC_KEY_FALSE(ksu_is_init_rc_hook_enabled);
-          EXPORT_SYMBOL_GPL(ksu_is_init_rc_hook_enabled);
+          grep -q "jump_label.h" "$KSUD" || sed -i '1i #include <linux/jump_label.h>' "$KSUD"
 
-          struct static_key ksu_input_hook_key_false  = STATIC_KEY_INIT_FALSE;
-          EXPORT_SYMBOL_GPL(ksu_input_hook_key_false);
+          echo "" >> "$KSUD"
+          echo "/* palaziks: MANUAL_HOOK build - static keys normally from input_hook.c */" >> "$KSUD"
+          echo "#ifndef KSU_INPUT_HOOK_KEYS_DEFINED" >> "$KSUD"
+          echo "#define KSU_INPUT_HOOK_KEYS_DEFINED" >> "$KSUD"
+          echo "DEFINE_STATIC_KEY_FALSE(ksu_is_input_hook_enabled);" >> "$KSUD"
+          echo "EXPORT_SYMBOL_GPL(ksu_is_input_hook_enabled);" >> "$KSUD"
+          echo "DEFINE_STATIC_KEY_FALSE(ksu_is_init_rc_hook_enabled);" >> "$KSUD"
+          echo "EXPORT_SYMBOL_GPL(ksu_is_init_rc_hook_enabled);" >> "$KSUD"
+          echo "struct static_key ksu_input_hook_key_false = STATIC_KEY_INIT_FALSE;" >> "$KSUD"
+          echo "EXPORT_SYMBOL_GPL(ksu_input_hook_key_false);" >> "$KSUD"
+          echo "struct static_key ksu_init_rc_hook_key_false = STATIC_KEY_INIT_FALSE;" >> "$KSUD"
+          echo "EXPORT_SYMBOL_GPL(ksu_init_rc_hook_key_false);" >> "$KSUD"
+          echo "#endif" >> "$KSUD"
 
-          struct static_key ksu_init_rc_hook_key_false = STATIC_KEY_INIT_FALSE;
-          EXPORT_SYMBOL_GPL(ksu_init_rc_hook_key_false);
-          EOF
-          
-          # Append to Makefile only once
-          if ! grep -q "ksu_static_keys_stub" Makefile 2>/dev/null; then
-            echo "kernelsu-y += ksu_static_keys_stub.o" >> Makefile
-          fi
-          
-          echo "✅ KSU static key stubs injected"
+          echo "✅ Static key definitions injected into $KSUD"
 
       - name: 🔧 Setup Patches
         run: |
@@ -866,91 +845,39 @@ jobs:
           export PATH="/usr/lib/ccache:$PATH"
           export PATH="$WORKDIR/kernel_workspace/zyc-clang/bin:$WORKDIR/kernel_workspace/build-tools/linux-x86/bin:$PATH"
           CLANG_DIR="$WORKDIR/kernel_workspace/zyc-clang/bin"
-          CLANG_VERSION="$($CLANG_DIR/clang --version | head -n 1)"
-          LLD_VERSION="$($CLANG_DIR/ld.lld --version | head -n 1)"
-          echo "Compiler Info:"
-          echo "Clang Version: $CLANG_VERSION"
-          echo "LLD Version: $LLD_VERSION"
-          pahole_version=$(pahole --version 2>/dev/null | head -n1); [ -z "$pahole_version" ] && echo "Pahole: Not Installed" || echo "Pahole: $pahole_version"
-          
-          export CCACHE_LOGFILE="${{ github.workspace }}/kernel_workspace/ccache.log"
-          export CCACHE_COMPILERCHECK="none"
-          export CCACHE_BASEDIR="${{ github.workspace }}"
-          export CCACHE_NOHASHDIR="true"
-          export CCACHE_HARDLINK="true"
+          echo "Clang: $($CLANG_DIR/clang --version | head -n 1)"
+          echo "LLD:   $($CLANG_DIR/ld.lld --version | head -n 1)"
+          pahole --version 2>/dev/null || echo "Pahole: Not Installed"
+
           export CCACHE_DIR="${{ env.CCACHE_DIR }}"
-          export CCACHE_MAXSIZE="10G"
-          echo "sloppiness = file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros" >> "$CCACHE_DIR/ccache.conf"
-          
+          export CCACHE_LOGFILE="${{ github.workspace }}/kernel_workspace/ccache.log"
+          # All other ccache settings are in ccache.conf from the init step
+
           cd kernel_workspace/common
           wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/libfakestat.so || true
           wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/libfaketimeMT.so || true
           chmod 777 ./*.so || true
+          SO_DIR=$(pwd)
           export FAKESTAT="2025-05-25 12:00:00"
           export FAKETIME="@2025-05-25 13:00:00"
-          echo "FAKESTAT=$FAKESTAT" >> $GITHUB_ENV
-          echo "FAKETIME=$FAKETIME" >> $GITHUB_ENV
-          SO_DIR=$(pwd)
           export PRELOAD_LIBS="$SO_DIR/libfakestat.so $SO_DIR/libfaketimeMT.so"
-          
-          echo '#!/bin/bash' > cc-wrapper
-          echo 'export LD_PRELOAD="'$PRELOAD_LIBS'"' >> cc-wrapper
-          echo 'export FAKESTAT="'$FAKESTAT'"' >> cc-wrapper
-          echo 'export FAKETIME="'$FAKETIME'"' >> cc-wrapper
-          echo 'ccache clang "$@"' >> cc-wrapper
-          
-          echo '#!/bin/bash' > ld-wrapper
-          echo 'export LD_PRELOAD="'$PRELOAD_LIBS'"' >> ld-wrapper
-          echo 'export FAKESTAT="'$FAKESTAT'"' >> ld-wrapper
-          echo 'export FAKETIME="'$FAKETIME'"' >> ld-wrapper
-          echo 'ld.lld "$@"' >> ld-wrapper
-          
-          echo "--- [Wrapper Test] Creating Time Hijack Test Script ---"
-          echo '#!/bin/bash' > test-wrapper.sh
-          echo 'export LD_PRELOAD="'$PRELOAD_LIBS'"' >> test-wrapper.sh
-          echo 'export FAKESTAT="'$FAKESTAT'"' >> test-wrapper.sh
-          echo 'export FAKETIME="'$FAKETIME'"' >> test-wrapper.sh
-          echo 'echo ">>> Wrapper environment check complete."' >> test-wrapper.sh
-          echo 'exec "$@"' >> test-wrapper.sh
-          chmod +x test-wrapper.sh
-          echo "--- [Wrapper Test] Testing (date) command ---"
-          ./test-wrapper.sh date
-          echo "--- [Wrapper Test] Testing (stat) command ---"
-          ./test-wrapper.sh stat ./Makefile
-          echo "--- [Wrapper Test] Test Complete ---"
-          chmod +x cc-wrapper ld-wrapper
-          
-          echo "--- Pre-Build Time: $(LD_PRELOAD=$PRELOAD_LIBS date) ---"
-          echo "--- Pre-Build File Timestamps: ---"
-          LD_PRELOAD=$PRELOAD_LIBS stat ./Makefile
-          
-          sudo rm -rf /usr/share/dotnet &
-          sudo rm -rf /usr/local/lib/android &
-          sudo rm -rf /opt/ghc &
-          sudo rm -rf /opt/hostedtoolcache/CodeQL &
 
-          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
-          CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out \
-          KCFLAGS="-O2 -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option" \
-          gki_defconfig && \
-          
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL &
+
+          # Single defconfig pass, then build Image
           make -j$(nproc --all) LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
             CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out \
             KCFLAGS="-O2 -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option" \
             gki_defconfig
-          
+
           make -j$(nproc --all) LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
             CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out \
             KCFLAGS="-O2 -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option ${EXTRA_CFLAGS:-} ${MAP}" \
             Image
 
-          echo "--- Post-Build Time: $(LD_PRELOAD=$PRELOAD_LIBS date) ---"
-          echo "--- Post-Build File Timestamps: ---"
-          LD_PRELOAD=$PRELOAD_LIBS stat ./Makefile
           echo "Kernel Compilation Complete!"
           echo "CCache Status:"
           ccache -s
-          echo "Disk Space Post-Build:"
           df -h
 
       - name: 📦 Save New CCache
