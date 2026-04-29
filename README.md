@@ -25,23 +25,41 @@
 ### 📝 Features
 
 ➜ **SuSFS** Support
+
 ➜ **NTSync** Support
+
 ➜ **Droidspaces** Support
+
 ➜ **IP_SET + IPv6 NAT** Patches
+
 ➜ **TTL Target** Patches
+
 ➜ **Memory Opt** Patches
+
 ➜ **Multi-Manager Support** for SukiSU Ultra / ReSukiSU
+
 ➜ **KPM** Support for SukiSU Ultra / ReSukiSU
+
 ➜ **LZ4** Patches
+
 ➜ **LZ4KD** Patches
+
 ➜ **BBR/Brutal** Patches
+
 ➜ **ADIOS IO** Pathces
 ➜ **Baseband Guard**
+
 ➜ **Fengchi** Optimization
+
 ➜ **Unicode Fix** Patches
+
 ➜ **WireGuard VPN** Kernel level Support
+
 ➜ **LRNG v59** Patches
+
 ➜ **Wakelock Blocker** Patches
+
+---
 
 ### 🤖 Compiler changes
 
@@ -54,6 +72,7 @@
 ➜ O2 compiler flag
 
 ---
+
 ### ✨ How to compile!
 
 ➜ **fork** the project (with all branches)
@@ -67,6 +86,7 @@
 ➜ run workflow
 
 ---
+
 ### 📱 Supported devices
 
 > OnePlus 13
