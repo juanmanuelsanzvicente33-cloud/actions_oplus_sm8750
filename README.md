@@ -1,7 +1,7 @@
 <div id="toc" align="center" style="margin-bottom: 0; padding-bottom: 0;">
   <ul style="list-style: none; margin: 0; padding: 0;">
     <summary>
-      <h1 align="center" style="margin: 0; padding: 0;">⋆. palaziks OnePlus Kernel ⋆</h1>
+      <h1 align="center" style="margin: 0; padding: 0;">⋆ palaziks OnePlus Kernel ⋆</h1>
       <p align="center" style="font-size:12px; margin-top: 5px; margin-bottom: 20px;">
         <i>Performance-focused GKI 6.6 kernel for OnePlus 13 (SM8750) with SukiSU Ultra</i>
       </p>
@@ -26,7 +26,7 @@
 | **Kernel Version** | `Linux 6.6` (GKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
 | **ROM Compatibility** | OxygenOS / ColorOS (CN & Global) |
-| **Root Solution** | SukiSU Ultra / ReSukiSU (Multi-Manager) |
+| **Root Solution** | SukiSU Ultra / KSU Next (Multi-Manager) |
 | **Build System** | GitHub Actions CI/CD (optimized for ~4-5min builds) |
 
 ---
@@ -190,6 +190,7 @@ This CI pipeline includes:
 
 | Contributor | Contribution |
 |-------------|-------------|
+| [mrcxlinux](https://github.com/mrcxlinux) | The base workflow
 | [xiaomichael](https://github.com/xiaomichael) | Some help & GKI infrastructure |
 | [cctv18](https://github.com/cctv18) | SuSFS, ccache-ECS, Baseband Guard, public ccache |
 | [vc-teahouse](https://github.com/vc-teahouse) | SukiSU Ultra core & KPM framework |
