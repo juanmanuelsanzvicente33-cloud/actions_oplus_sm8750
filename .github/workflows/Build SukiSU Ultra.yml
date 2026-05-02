@@ -326,6 +326,8 @@ jobs:
           ccache -o compression=true
           ccache -o compiler_check=none
           ccache -o hash_dir=false
+          ccache -o direct_mode=true
+          ccache -o depend_mode=false
           ccache -o base_dir="${{ github.workspace }}"
           ccache -o sloppiness=file_stat_matches,include_file_ctime,include_file_mtime,pch_defines,file_macro,time_macros,locale
 
@@ -435,6 +437,7 @@ jobs:
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
             cp susfs4oki/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
+            cp susfs4oki/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./common/
             cp susfs4oki/kernel_patches/fs/* ./common/fs/
             cp susfs4oki/kernel_patches/include/linux/* ./common/include/linux/
           else
@@ -451,6 +454,10 @@ jobs:
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
             echo "📦 Applying SUSFS patch..."
             patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || true
+            echo "📦 Applying KernelSU SUSFS patch..."
+            cd KernelSU
+            patch -p1 < ../10_enable_susfs_for_ksu.patch || true
+            cd ..
           fi
 
           echo "✅ Base patches applied"
@@ -935,13 +942,18 @@ jobs:
           export CCACHE_DIR="${{ env.CCACHE_DIR }}"
           export CCACHE_LOGFILE="${{ github.workspace }}/kernel_workspace/ccache.log"
           export CCACHE_IS_KERNEL_COMPILING=true
-          # All other ccache settings are in ccache.conf from the init step
+
+          # RAM disk for build output (15GB RAM available, safe to use)
+          mkdir -p /dev/shm/kout
+          mkdir -p /dev/shm/ldcache_6.6.127
 
           cd kernel_workspace/common
-          mkdir -p "$LDCACHE_DIR"
+
+          # LTO thin cache wrapper pointing to RAM disk
           echo '#!/bin/bash' > ld-wrapper
-          echo 'ld.lld "$@" --thinlto-cache-dir='"$LDCACHE_DIR"' --thinlto-jobs=$(($(nproc --all) / 2))' >> ld-wrapper
+          echo 'ld.lld "$@" --thinlto-cache-dir=/dev/shm/ldcache_6.6.127 --thinlto-jobs=$(($(nproc --all) / 2))' >> ld-wrapper
           chmod +x ld-wrapper
+
           wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/libfakestat.so || true
           wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/libfaketimeMT.so || true
           chmod 777 ./*.so || true
@@ -950,24 +962,23 @@ jobs:
           export FAKETIME="@2025-05-25 13:00:00"
           export PRELOAD_LIBS="$SO_DIR/libfakestat.so $SO_DIR/libfaketimeMT.so"
 
-          # Single defconfig pass, then build Image
+          # defconfig pass — output to RAM disk
           make -j$(nproc --all) LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
-            CC="ccache clang" LD="$(pwd)/ld-wrapper" HOSTLD="$(pwd)/ld-wrapper" O=out \
-            KCFLAGS="-O2 -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option" \
+            CC="ccache clang" LD="$(pwd)/ld-wrapper" HOSTLD="$(pwd)/ld-wrapper" \
+            O=/dev/shm/kout \
+            KCFLAGS="-O2 -pipe -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option" \
             gki_defconfig
 
+          # Image build — output to RAM disk
           make -j$(nproc --all) LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
-            CC="ccache clang" LD="$(pwd)/ld-wrapper" HOSTLD="$(pwd)/ld-wrapper" O=out \
-            KCFLAGS="-O2 -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option ${EXTRA_CFLAGS:-} ${MAP}" \
+            CC="ccache clang" LD="$(pwd)/ld-wrapper" HOSTLD="$(pwd)/ld-wrapper" \
+            O=/dev/shm/kout \
+            KCFLAGS="-O2 -pipe -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option ${EXTRA_CFLAGS:-} ${MAP}" \
             Image
 
           echo "Kernel Compilation Complete!"
-
-          echo "Cleaning temporary cache files..."
           ccache -c
-          echo "Performing cache eviction..."
           ccache --evict-older-than 10800s
-          
           echo "CCache Status:"
           ccache -s
           df -h
@@ -989,13 +1000,12 @@ jobs:
       - name: 🧩 Patch Kernel Image (KPM)
         if: inputs.KPM
         run: |
-          cd kernel_workspace/kernel_platform/out/Final-Image-Find
+          cd /dev/shm/kout/arch/arm64/boot
           curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.13.0/patch_linux
           chmod +x patch_linux
           ./patch_linux
           rm -f Image
           mv oImage Image
-          cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
 
       - name: 🧠 Package AK3 ZIP
         id: create_zip
@@ -1004,7 +1014,7 @@ jobs:
           git clone https://github.com/palazik/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
           cd AnyKernel3
-          cp ../common/out/arch/arm64/boot/Image ./Image
+          cp /dev/shm/kout/arch/arm64/boot/Image ./Image
           if [[ ! -f ./Image ]]; then
             echo "Kernel Image not found, build may have failed."
             exit 1
@@ -1051,7 +1061,7 @@ jobs:
 
       - name: 📝 Make ZRAM module
         run: |
-          ZRAM_KO=$(find kernel_workspace/common/out -name "zram.ko" | head -1)
+          ZRAM_KO=$(find /dev/shm/kout -name "zram.ko" | head -1)
           if [ -z "$ZRAM_KO" ]; then
             echo "⚠️ zram.ko not found, skipping"
             exit 0
