@@ -362,8 +362,6 @@ jobs:
       - name: 🔧 Setup Patches
         run: |
           cd kernel_workspace
-
-          echo "⬇️ Cloning patch repos..."
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
             git clone --depth=1 -b oki-android15-6.6 https://github.com/cctv18/susfs4oki.git &
           fi
@@ -373,12 +371,10 @@ jobs:
           wait
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            echo "📝 Staging SUSFS files..."
-            # 50_ + source files -> kernel root (common/)
+            echo "📝 Staging SUSFS kernel-side files..."
             cp susfs4oki/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
             cp susfs4oki/kernel_patches/fs/* ./common/fs/
             cp susfs4oki/kernel_patches/include/linux/* ./common/include/linux/
-            # 10_ -> inside the fork dir (KernelSU/)
             cp susfs4oki/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./common/KernelSU/
           fi
 
@@ -388,28 +384,29 @@ jobs:
           git apply -p1 < EnablePOLLY.patch || true
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            echo "📦 [1/2] Applying 10_ inside KernelSU/ (most hunks already in-source — rejects EXPECTED)..."
+            echo "📦 [1/2] Applying 10_ inside KernelSU/ (tops up any missing SID integration)..."
             ( cd KernelSU && patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true )
-            # clean the expected 10_ rejects (already-present code)
+            # 10_ must result in the SID block being present (in-source OR added). Verify, then clear expected rejects.
+            grep -q "susfs_is_current_zygote_domain\|susfs_init_sid" KernelSU/kernel/selinux/selinux.c \
+              || { echo "❌ SUSFS SID integration absent after 10_ — aborting"; exit 1; }
             find KernelSU -name '*.rej' -delete
 
             echo "📦 [2/2] Applying 50_ at kernel root..."
             patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || true
 
-            # task_mmu.c hunk #7 (unbraced variant) rejects BY DESIGN on upstreamed trees;
-            # hunk #8 (braced variant) applies instead. Verify guard landed, drop expected rej.
+            # task_mmu.c ships unbraced + braced show_smaps_rollup variants; your upstreamed tree
+            # matches the braced one (applies). The unbraced variant rejects BY DESIGN.
             if grep -q "SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))" fs/proc/task_mmu.c; then
-              echo "✅ SUS_MAP guard applied — removing expected task_mmu.c reject"
+              echo "✅ SUS_MAP guard applied — dropping the one expected reject"
               rm -f fs/proc/task_mmu.c.rej
             else
               echo "❌ SUS_MAP guard missing — real failure"; cat fs/proc/task_mmu.c.rej 2>/dev/null; exit 1
             fi
 
             if find . -name '*.rej' | grep -q .; then
-              echo "❌ Unexpected rejects:"; find . -name '*.rej' -exec sh -c 'echo "--- $1 ---"; cat "$1"' _ {} \;
-              exit 1
+              echo "❌ Unexpected rejects — failing:"; find . -name '*.rej' -exec sh -c 'echo "=== $1 ==="; cat "$1"' _ {} \; ; exit 1
             fi
-            echo "✅ SUSFS applied"
+            echo "✅ SUSFS applied cleanly"
           fi
           echo "✅ Base patches applied"
 
