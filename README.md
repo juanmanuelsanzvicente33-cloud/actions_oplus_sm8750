@@ -2,11 +2,11 @@
   <ul style="list-style: none; margin: 0; padding: 0;">
     <summary>
       <h1 align="center" style="margin: 0; padding: 0;">⋆ palaziks OnePlus Kernel ⋆</h1>
-      <p align="center" style="font-size:12px; margin-top: 5px; margin-bottom: 2px;">
-        <i>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750)</i>
+      <p align="center" style="font-size: 9px; color: #777; margin-top: 5px; margin-bottom: 2px;">
+        <small>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750)</small>
       </p>
-      <p align="center" style="font-size: 9px; color: #777; margin-top: 0; margin-bottom: 20px;">
-        <small>SukiSU Ultra &amp; ReSukiSU &amp; KernelSU &amp; KernelSU Next</small>
+      <p align="center" style="font-size:12px; margin-top: 0; margin-bottom: 20px;">
+        <i>SukiSU Ultra &amp; ReSukiSU &amp; KernelSU &amp; KernelSU Next</i>
       </p>
     </summary>
   </ul>
