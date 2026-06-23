@@ -2,8 +2,11 @@
   <ul style="list-style: none; margin: 0; padding: 0;">
     <summary>
       <h1 align="center" style="margin: 0; padding: 0;">⋆ palaziks OnePlus Kernel ⋆</h1>
-      <p align="center" style="font-size:12px; margin-top: 5px; margin-bottom: 20px;">
-        <i>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750) with KernelSU Next</i>
+      <p align="center" style="font-size:12px; margin-top: 5px; margin-bottom: 0;">
+        <i>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750)</i>
+      </p>
+      <p align="center" style="font-size:10px; color: #888; margin-top: 2px; margin-bottom: 20px;">
+        SukiSU Ultra &amp; ReSukiSU &amp; KernelSU &amp; KernelSU Next
       </p>
     </summary>
   </ul>
@@ -22,7 +25,7 @@
 
 | Property | Value |
 |----------|-------|
-| **Version** | `6.6.139` (upstreamed from 6.6.89) |
+| **Version** | `6.6.142` (upstreamed from 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
 | **Kernel Version** | `Linux 6.6` (GKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
@@ -220,6 +223,6 @@ This CI pipeline includes:
 </p>
 
 <p align="center">
-  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.139-palaziks-ShiftPorts</code></sub>
+  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.142-palaziks-ShiftPorts</code></sub>
 </p>
 ```
