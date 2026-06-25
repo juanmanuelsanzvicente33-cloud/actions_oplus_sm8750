@@ -336,7 +336,7 @@ jobs:
           echo "Updating atime to achieve cache eviction..."
           find "${{ env.CCACHE_DIR }}" -type f -exec touch -t $(date -d "1 day ago" +%Y%m%d%H%M) {} + || true
               
-      - name: ⚡ Setup KageSU Ultra
+      - name: ⚡ Setup KageSU
         run: |
           cd kernel_workspace/common
           echo "🛠️ Setting up KageSU (builtin)..."
