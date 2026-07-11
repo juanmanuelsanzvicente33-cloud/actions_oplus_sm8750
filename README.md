@@ -197,8 +197,11 @@ This CI pipeline includes:
 |--------|----------|--------|
 | **OnePlus 13** | `PJZ110` (CN) / `OP13` (Global) | ✅ Fully Supported |
 | **OnePlus 13T** | `PKX110` | ✅ Fully Supported |
+| **OnePlus 13s** | `CPH2723` | ✅ Fully Supported |
+| **OnePlus Ace 6** | `PLQ110` | ✅ Fully Supported |
+| **OnePlus Ace 5 Pro** | `PKR110` | ✅ Fully Supported |
 | **OnePlus Pad 3** | `OPD2415` | ✅ Fully Supported |
-| **OnePlus Pad 2 Pro** | `OPD2413` | ✅ Fully Supported | 
+| **OnePlus Pad 2 Pro** | `OPD2413` | ✅ Fully Supported |
 
 > Requires unlocked bootloader + custom recovery (TWRP / KernelFlasher)
 
