@@ -25,7 +25,7 @@
 
 | Property | Value |
 |----------|-------|
-| **Kernel Version** | `6.6.141` (upstreamed from OGKI 6.6.89) |
+| **Kernel Version** | `6.6.142` (upstreamed from OGKI 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
 | **ROM Compatibility** | OxygenOS / ColorOS **or** AOSP — one build per ROM type ([see below](#-rom-compatibility)) |
@@ -257,6 +257,6 @@ This CI pipeline includes:
 </p>
 
 <p align="center">
-  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.141-palaziks-ShiftPorts</code></sub>
+  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.142-palaziks-ShiftPorts</code></sub>
 </p>
 ```
