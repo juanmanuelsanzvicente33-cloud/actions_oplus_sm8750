@@ -363,7 +363,7 @@ jobs:
           fi
           git clone --depth=1 https://github.com/mrcxlinux/kernel_patches.git &
           git clone --depth=1 https://github.com/ShirkNeko/SukiSU_patch.git &
-          git clone --depth=1 https://github.com/TheWildJames/kernel_patches.git wildkernels_patches &
+          git clone --depth=1 https://github.com/palazik/kernel_patches.git wildkernels_patches &
           wait
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
@@ -553,7 +553,7 @@ jobs:
       - name: Apply Unicode Bypass Fix
         working-directory: kernel_workspace/common
         run: |
-          PATCH_URL="https://github.com/TheWildJames/kernel_patches/raw/main/common/unicode_bypass_fix_6.1+.patch"
+          PATCH_URL="https://github.com/palazik/kernel_patches/raw/main/common/unicode_bypass_fix_6.1+.patch"
           wget -qO /tmp/ub_fix.patch "$PATCH_URL" 2>/dev/null && \
             patch -p1 --forward < /tmp/ub_fix.patch || true
           echo "Unicode fix applied"

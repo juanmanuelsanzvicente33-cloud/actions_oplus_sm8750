@@ -249,8 +249,6 @@ jobs:
             sudo apt-get install -y --no-install-recommends cmake
             git clone --depth=1 https://github.com/cctv18/ccache-ECS.git /tmp/ccache-ecs
             cd /tmp/ccache-ecs
-            # Без CMAKE_GENERATOR — использует make, ninja не нужен
-            # DEPS=DOWNLOAD внутри build-binary — cmake сам скачивает zstd/hiredis
             ./ci/build-binary
             mkdir -p /tmp/ccache-ecs-bin
             cp install/ccache /tmp/ccache-ecs-bin/ccache
@@ -357,11 +355,11 @@ jobs:
           echo "⬇️ Cloning patch repos..."
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
             git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6 &
-            git clone --depth=1 https://github.com/WildKernels/kernel_patches.git wild_susfs_fix &
+            git clone --depth=1 https://github.com/palazik/kernel_patches.git wild_susfs_fix &
           fi
           git clone --depth=1 https://github.com/mrcxlinux/kernel_patches.git &
           git clone --depth=1 https://github.com/ShirkNeko/SukiSU_patch.git &
-          git clone --depth=1 https://github.com/TheWildJames/kernel_patches.git wildkernels_patches &
+          git clone --depth=1 https://github.com/palazik/kernel_patches.git wildkernels_patches &
           wait
       
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
@@ -549,7 +547,7 @@ jobs:
       - name: Apply Unicode Bypass Fix
         working-directory: kernel_workspace/common
         run: |
-          PATCH_URL="https://github.com/TheWildJames/kernel_patches/raw/main/common/unicode_bypass_fix_6.1+.patch"
+          PATCH_URL="https://github.com/palazik/kernel_patches/raw/main/common/unicode_bypass_fix_6.1+.patch"
           wget -qO /tmp/ub_fix.patch "$PATCH_URL" 2>/dev/null && \
             patch -p1 --forward < /tmp/ub_fix.patch || true
           echo "Unicode fix applied"
@@ -564,7 +562,6 @@ jobs:
           patch -p1 -F 3 < /tmp/bore.patch
           echo "✅ BORE scheduler applied"
 
-      # ── NEW: Memory & Scheduler Optimization Patches (WildKernels) ───────────
       - name: Apply Memory & Scheduler Optimization Patches
         if: inputs.mem_opt_patches
         working-directory: kernel_workspace/common
@@ -610,7 +607,6 @@ jobs:
 
           echo "✅ Optimization patches applied"
 
-      # ── NEW: NTSync ──────────────────────────────────────────────────────────
       - name: Apply NTSync Patch
         if: inputs.ntsync_enable
         working-directory: kernel_workspace/common
@@ -651,7 +647,6 @@ jobs:
           echo "CONFIG_NTSYNC=y" >> arch/arm64/configs/gki_defconfig
           echo "✅ NTSync enabled"
 
-      # ── NEW: Droidspaces ─────────────────────────────────────────────────────
       - name: Add Droidspaces Support
         if: inputs.droidspaces_enable
         working-directory: kernel_workspace/common
@@ -682,7 +677,6 @@ jobs:
           EOF
           echo "✅ Droidspaces support enabled"
 
-      # ── NEW: IP_SET + IPv6 NAT ───────────────────────────────────────────────
       - name: Add IP_SET + IPv6 NAT Support
         if: inputs.ip_set_enable
         working-directory: kernel_workspace/common
@@ -724,7 +718,6 @@ jobs:
           fi
           echo "✅ IP_SET + IPv6 NAT enabled"
 
-      # ── NEW: TTL Target ──────────────────────────────────────────────────────
       - name: Add TTL/HL Target Support
         if: inputs.ttl_enable
         working-directory: kernel_workspace/common
@@ -842,7 +835,6 @@ jobs:
             fi
           fi
 
-      # ── BBRv3 (FatalCoder524 method — patch from WildKernels/kernel_patches) ──
       - name: Apply BBRv3
         working-directory: kernel_workspace/common
         run: |

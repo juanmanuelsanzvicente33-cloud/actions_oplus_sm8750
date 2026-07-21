@@ -260,7 +260,7 @@ jobs:
           fi
           git clone --depth=1 https://github.com/mrcxlinux/kernel_patches.git &
           git clone --depth=1 https://github.com/ShirkNeko/SukiSU_patch.git &
-          git clone --depth=1 https://github.com/TheWildJames/kernel_patches.git wildkernels_patches &
+          git clone --depth=1 https://github.com/palazik/kernel_patches.git wildkernels_patches &
           wait
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then

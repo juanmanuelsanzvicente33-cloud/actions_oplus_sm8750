@@ -259,4 +259,3 @@ This CI pipeline includes:
 <p align="center">
   <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.142-palaziks-ShiftPorts</code></sub>
 </p>
-```
