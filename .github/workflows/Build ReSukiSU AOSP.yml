@@ -418,11 +418,6 @@ jobs:
             echo "CONFIG_CRYPTO_842=y" >> "$DEFCONFIG"
           fi
       
-          # KPatch-Next (KPN) readiness: KPM is added on-device by flashing
-          # KPatch-Next-Module, which requires CONFIG_KALLSYMS_ALL=y in the kernel.
-          echo "CONFIG_KALLSYMS=y" >> "$DEFCONFIG"
-          echo "CONFIG_KALLSYMS_ALL=y" >> "$DEFCONFIG"
-      
           echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$DEFCONFIG"
           sed -i 's/check_defconfig//' ./common/build.config.gki
           echo "CONFIG_HEADERS_INSTALL=n" >> "$DEFCONFIG"
@@ -987,7 +982,6 @@ jobs:
           echo "KSU Branch: ${KSU_TYPENAME}" >> ./ak3.log
           echo "KSU Ver: ${KSUVER}" >> ./ak3.log
           echo "SuSFS: ${{ github.event.inputs.SUSFS }}" >> ./ak3.log
-          echo "KPN: KPatch-Next-Module (flashable; kernel is KALLSYMS_ALL ready)" >> ./ak3.log
           echo "LZ4: ${{ github.event.inputs.lz4_enable }}" >> ./ak3.log
           echo "LZ4KD: ${{ github.event.inputs.lz4kd_enable }}" >> ./ak3.log
           echo "BBR&Brutal: ${{ github.event.inputs.bbr_enable }}" >> ./ak3.log
@@ -1052,7 +1046,6 @@ jobs:
           export TG_RUN_URL="$RUN_URL"
           export TG_REPO="${{ github.repository }}"
           export TG_SUSFS="${{ github.event.inputs.SUSFS }}"
-          export TG_KPN="module"
           export TG_BBR="${{ github.event.inputs.bbr_enable }}"
           export TG_BBR3="true"
           export TG_ADIOS="${{ github.event.inputs.adios_enable }}"
@@ -1105,7 +1098,6 @@ jobs:
               {"tag": "h4", "children": ["⚡ Features"]},
               {"tag": "ul", "children": [
                   feat(e("TG_SUSFS"),   "SuSFS"),
-                  feat("true", "KPN-ready (flash KPatch-Next-Module for KPM)"),
                   feat("true" if e("TG_BBR") != "false" else "false", f"BBR/Brutal ({e('TG_BBR')})"),
                   feat(e("TG_BBR3"), "BBRv3 TCP Congestion Control"),
                   feat(e("TG_ADIOS"),   "ADIOS IO Scheduler"),
@@ -1271,7 +1263,6 @@ jobs:
           - **TTL Target:** ${{ github.event.inputs.ttl_enable }}
           - **Memory & Scheduler Optimizations:** ${{ github.event.inputs.mem_opt_patches }}
           - **Multi-Manager:** true
-          - **KPN (KPM):** kernel is KALLSYMS_ALL-ready — flash [KPatch-Next-Module](https://github.com/KernelSU-Next/KPatch-Next-Module) to enable
           - **LZ4:** ${{ github.event.inputs.lz4_enable }}
           - **LZ4KD:** ${{ github.event.inputs.lz4kd_enable }}
           - **ZRAM Writeback:** ${{ github.event.inputs.zram_writeback }}

@@ -94,7 +94,6 @@
 - ✅ **Re-Kernel Support** – Enhanced app freezing via NoActive/Freezer *(optional)*
 
 ### 🧩 KernelSU Enhancements
-- ✅ **KPM Support** – Kernel Patch Module for SukiSU Ultra *(optional)*
 - ✅ **Multi-Manager** – Compatible with multiple KSU variants
 
 ---
@@ -166,7 +165,7 @@
    - ✅ Fengchi (performance scheduler)
    - ✅ Memory Opt Patches (25 optimizations)
    - 🔘 LTO Type: `thin` (balanced) / `none` (fastest compile) / `full` (max optimization)
-   - 🔘 Optional features: KPM, LZ4KD, NTSync, IPv6 NAT, etc.
+   - 🔘 Optional features: LZ4KD, NTSync, IPv6 NAT, etc.
 5. Click **"Run workflow"** → Wait ~5-6 minutes
 6. Download `AnyKernel3_*.zip` from artifacts or Telegram (if you configured TG bot)
 
@@ -230,7 +229,7 @@ This CI pipeline includes:
 | [mrcxlinux](https://github.com/mrcxlinux) | The base workflow
 | [xiaomichael](https://github.com/xiaomichael) | Some help & GKI infrastructure |
 | [cctv18](https://github.com/cctv18) | SuSFS, ccache-ECS, Baseband Guard, public ccache |
-| [vc-teahouse](https://github.com/vc-teahouse) | SukiSU Ultra core & KPM framework |
+| [vc-teahouse](https://github.com/vc-teahouse) | SukiSU Ultra core |
 | [Numbersf](https://github.com/Numbersf) | Fengchi / HMBIRD scheduler patches |
 | [WildKernels](https://github.com/WildKernels) | 25 memory/scheduler optimization patches, BBRv3 backport patch & workflow optimization |
 | [ShirkNeko](https://github.com/ShirkNeko) | LZ4KD & ZRAM patches |

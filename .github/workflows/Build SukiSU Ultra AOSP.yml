@@ -19,11 +19,6 @@ on:
         required: true
         type: boolean
         default: true
-      KPM:
-        description: 'Enable KPM'
-        required: true
-        type: boolean
-        default: false
       lz4_enable:
         description: 'Install LZ4 1.10.0 + ZSTD 1.5.7 Patch'
         required: true
@@ -433,11 +428,6 @@ jobs:
             echo "CONFIG_CRYPTO_LZ4K=y" >> "$DEFCONFIG"
             echo "CONFIG_CRYPTO_LZ4KD=y" >> "$DEFCONFIG"
             echo "CONFIG_CRYPTO_842=y" >> "$DEFCONFIG"
-          fi
-      
-          if [ "${{ github.event.inputs.KPM }}" == "true" ]; then
-            echo "📦 Enabling KPM..."
-            echo "CONFIG_KPM=y" >> "$DEFCONFIG"
           fi
       
           echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$DEFCONFIG"
@@ -977,22 +967,6 @@ jobs:
           path: ${{ env.LDCACHE_DIR }}
           key: lto-cache-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
           
-      - name: 🧩 Patch Kernel Image (KPM)
-        if: inputs.KPM
-        run: |
-          cd $GITHUB_WORKSPACE/kout/arch/arm64/boot
-          cp ${{ github.workspace }}/kernel_workspace/SukiSU_patch/kpm/patch_linux ./
-          chmod +x patch_linux
-          ./patch_linux
-          if [ -f oImage ]; then
-            rm -f Image patch_linux
-            mv oImage Image
-            echo "✅ KPM patched"
-          else
-            echo "❌ KPM patch failed"
-            exit 1
-          fi
-
       - name: 🧠 Package AK3 ZIP
         id: create_zip
         run: |
@@ -1025,7 +999,6 @@ jobs:
           echo "KSU Branch: ${KSU_TYPENAME}" >> ./ak3.log
           echo "KSU Ver: ${KSUVER}" >> ./ak3.log
           echo "SuSFS: ${{ github.event.inputs.SUSFS }}" >> ./ak3.log
-          echo "KPM: ${{ github.event.inputs.KPM }}" >> ./ak3.log
           echo "LZ4: ${{ github.event.inputs.lz4_enable }}" >> ./ak3.log
           echo "LZ4KD: ${{ github.event.inputs.lz4kd_enable }}" >> ./ak3.log
           echo "BBR&Brutal: ${{ github.event.inputs.bbr_enable }}" >> ./ak3.log
@@ -1090,7 +1063,6 @@ jobs:
           export TG_RUN_URL="$RUN_URL"
           export TG_REPO="${{ github.repository }}"
           export TG_SUSFS="${{ github.event.inputs.SUSFS }}"
-          export TG_KPM="${{ github.event.inputs.KPM }}"
           export TG_BBR="${{ github.event.inputs.bbr_enable }}"
           export TG_BBR3="true"
           export TG_ADIOS="${{ github.event.inputs.adios_enable }}"
@@ -1143,7 +1115,6 @@ jobs:
               {"tag": "h4", "children": ["⚡ Features"]},
               {"tag": "ul", "children": [
                   feat(e("TG_SUSFS"),   "SuSFS"),
-                  feat("true" if e("TG_KPM") != "false" else "false", f"KPM ({e('TG_KPM')})"),
                   feat("true" if e("TG_BBR") != "false" else "false", f"BBR/Brutal ({e('TG_BBR')})"),
                   feat(e("TG_BBR3"), "BBRv3 TCP Congestion Control"),
                   feat(e("TG_ADIOS"),   "ADIOS IO Scheduler"),
@@ -1309,7 +1280,6 @@ jobs:
           - **TTL Target:** ${{ github.event.inputs.ttl_enable }}
           - **Memory & Scheduler Optimizations:** ${{ github.event.inputs.mem_opt_patches }}
           - **Multi-Manager:** true
-          - **KPM:** ${{ github.event.inputs.KPM }}
           - **LZ4:** ${{ github.event.inputs.lz4_enable }}
           - **LZ4KD:** ${{ github.event.inputs.lz4kd_enable }}
           - **ZRAM Writeback:** ${{ github.event.inputs.zram_writeback }}
